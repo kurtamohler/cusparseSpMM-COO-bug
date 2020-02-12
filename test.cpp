@@ -308,4 +308,16 @@ int main() {
         row_indices_3,
         col_indices_3
     );
+
+    // Ascending order also fails
+    int64_t nnz_4 = 3;
+    double values_4[nnz_4] = {1, 1, 1};
+    int64_t row_indices_4[nnz_4] = {0, 1, 2};
+    int64_t col_indices_4[nnz_4] = {0, 1, 2};
+    do_cusparse_spmm3x3(
+        nnz_4,
+        values_4,
+        row_indices_4,
+        col_indices_4
+    );
 }
