@@ -234,6 +234,7 @@ void do_cusparse_spmm3x3(
         buffer
     ));
 
+    std::cout << "result dense matrix c = a * b =" << std::endl;
     printCusparseDnMat<double>(c_dense_descr);
 
     std::cout << std::endl;
@@ -268,7 +269,8 @@ int main() {
     );
 
     // This 2 element sparse matrix multiply gives the
-    // correct result
+    // correct result, even though documentation says
+    // that elements should be in ascending row order
     int64_t nnz_1 = 2;
     double values_1[nnz_1] = {1, 1};
     int64_t row_indices_1[nnz_1] = {1, 0};
@@ -284,7 +286,8 @@ int main() {
     // However, simply reversing the order of the elements
     // from the previous sparse matrix gives an incorrect
     // result, which would seem to indicate that we need to
-    // list the elements in backward order
+    // list the elements in descending order, contrary to
+    // the documentation
     int64_t nnz_2 = 2;
     double values_2[nnz_2] = {1, 1};
     int64_t row_indices_2[nnz_2] = {0, 1};
