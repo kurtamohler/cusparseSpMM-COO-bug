@@ -323,4 +323,18 @@ int main() {
         row_indices_4,
         col_indices_4
     );
+
+    // A full 3x3 ones matrix also gives the wrong result.
+    // For some reason, everything gets summed into the first
+    // row, and the other two rows are all zeros
+    int64_t nnz_5 = 9;
+    double values_5[nnz_5] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
+    int64_t row_indices_5[nnz_5] = {0, 0, 0, 1, 1, 1, 2, 2, 2};
+    int64_t col_indices_5[nnz_5] = {0, 1, 2, 0, 1, 2, 0, 1, 2};
+    do_cusparse_spmm3x3(
+        nnz_5,
+        values_5,
+        row_indices_5,
+        col_indices_5
+    );
 }
