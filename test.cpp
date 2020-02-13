@@ -40,8 +40,8 @@ void printCusparseDnMat(cusparseDnMatDescr_t dense_descr) {
 template<typename T>
 void printCusparseSpMat(cusparseSpMatDescr_t sparse_descr) {
   T* values_dev;
-  int64_t* row_indices_dev;
-  int64_t* col_indices_dev;
+  int32_t* row_indices_dev;
+  int32_t* col_indices_dev;
   int64_t rows;
   int64_t cols;
   int64_t nnz;
@@ -62,11 +62,11 @@ void printCusparseSpMat(cusparseSpMatDescr_t sparse_descr) {
     &cuda_data_type
   );
   T* values_host = new T[nnz];
-  int64_t* row_indices_host = new int64_t[nnz];
-  int64_t* col_indices_host = new int64_t[nnz];
+  int32_t* row_indices_host = new int32_t[nnz];
+  int32_t* col_indices_host = new int32_t[nnz];
   cudaMemcpy(values_host, values_dev, nnz*sizeof(T), cudaMemcpyDeviceToHost);
-  cudaMemcpy(row_indices_host, row_indices_dev, nnz*sizeof(int64_t), cudaMemcpyDeviceToHost);
-  cudaMemcpy(col_indices_host, col_indices_dev, nnz*sizeof(int64_t), cudaMemcpyDeviceToHost);
+  cudaMemcpy(row_indices_host, row_indices_dev, nnz*sizeof(int32_t), cudaMemcpyDeviceToHost);
+  cudaMemcpy(col_indices_host, col_indices_dev, nnz*sizeof(int32_t), cudaMemcpyDeviceToHost);
 
   for (int64_t i = 0; i < nnz; i++) {
     std::cout << "(" << row_indices_host[i]
@@ -104,8 +104,8 @@ void CHECK_CUSPARSE_ERROR(cusparseStatus_t status) {
 void do_cusparse_spmm3x3(
     int64_t a_nnz,
     double* a_values_host,
-    int64_t* a_row_indices_host,
-    int64_t* a_col_indices_host
+    int32_t* a_row_indices_host,
+    int32_t* a_col_indices_host
 ) {
     // Create sparse matrix a
     int64_t a_rows = 3;
@@ -114,11 +114,11 @@ void do_cusparse_spmm3x3(
     double* a_values_dev;
     cudaMalloc(&a_values_dev,a_nnz*sizeof(double));
 
-    int64_t* a_row_indices_dev;
-    cudaMalloc(&a_row_indices_dev,a_nnz*sizeof(int64_t));
+    int32_t* a_row_indices_dev;
+    cudaMalloc(&a_row_indices_dev,a_nnz*sizeof(int32_t));
 
-    int64_t* a_col_indices_dev;
-    cudaMalloc(&a_col_indices_dev,a_nnz*sizeof(int64_t));
+    int32_t* a_col_indices_dev;
+    cudaMalloc(&a_col_indices_dev,a_nnz*sizeof(int32_t));
 
     cusparseSpMatDescr_t a_sparse_descr;
 
@@ -130,14 +130,14 @@ void do_cusparse_spmm3x3(
         a_row_indices_dev,
         a_col_indices_dev,
         a_values_dev,
-        CUSPARSE_INDEX_64I,
+        CUSPARSE_INDEX_32I,
         CUSPARSE_INDEX_BASE_ZERO,
         CUDA_R_64F
     ));
     
     cudaMemcpy(a_values_dev, a_values_host, a_nnz*sizeof(double), cudaMemcpyHostToDevice);
-    cudaMemcpy(a_row_indices_dev, a_row_indices_host, a_nnz*sizeof(int64_t), cudaMemcpyHostToDevice);
-    cudaMemcpy(a_col_indices_dev, a_col_indices_host, a_nnz*sizeof(int64_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(a_row_indices_dev, a_row_indices_host, a_nnz*sizeof(int32_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(a_col_indices_dev, a_col_indices_host, a_nnz*sizeof(int32_t), cudaMemcpyHostToDevice);
 
     std::cout << "sparse matrix a:" << std::endl;
     printCusparseSpMat<double>(a_sparse_descr);
@@ -254,13 +254,10 @@ void do_cusparse_spmm3x3(
 }
 
 int main() {
-
-    // Seems to always give the correct result if sparse
-    // matrix only has 1 element
     int64_t nnz_0 = 1;
     double values_0[nnz_0] = {1};
-    int64_t row_indices_0[nnz_0] = {1};
-    int64_t col_indices_0[nnz_0] = {1};
+    int32_t row_indices_0[nnz_0] = {1};
+    int32_t col_indices_0[nnz_0] = {1};
     do_cusparse_spmm3x3(
         nnz_0,
         values_0,
@@ -268,13 +265,10 @@ int main() {
         col_indices_0
     );
 
-    // This 2 element sparse matrix multiply gives the
-    // correct result, even though documentation says
-    // that elements should be in ascending row order
     int64_t nnz_1 = 2;
     double values_1[nnz_1] = {1, 1};
-    int64_t row_indices_1[nnz_1] = {1, 0};
-    int64_t col_indices_1[nnz_1] = {1, 0};
+    int32_t row_indices_1[nnz_1] = {1, 0};
+    int32_t col_indices_1[nnz_1] = {1, 0};
     do_cusparse_spmm3x3(
         nnz_1,
         values_1,
@@ -282,16 +276,10 @@ int main() {
         col_indices_1
     );
 
-
-    // However, simply reversing the order of the elements
-    // from the previous sparse matrix gives an incorrect
-    // result, which would seem to indicate that we need to
-    // list the elements in descending order, contrary to
-    // the documentation
     int64_t nnz_2 = 2;
     double values_2[nnz_2] = {1, 1};
-    int64_t row_indices_2[nnz_2] = {0, 1};
-    int64_t col_indices_2[nnz_2] = {0, 1};
+    int32_t row_indices_2[nnz_2] = {0, 1};
+    int32_t col_indices_2[nnz_2] = {0, 1};
     do_cusparse_spmm3x3(
         nnz_2,
         values_2,
@@ -299,12 +287,10 @@ int main() {
         col_indices_2
     );
 
-
-    // But backward order fails with more than 2 elements
     int64_t nnz_3 = 3;
     double values_3[nnz_3] = {1, 1, 1};
-    int64_t row_indices_3[nnz_3] = {2, 1, 0};
-    int64_t col_indices_3[nnz_3] = {2, 1, 0};
+    int32_t row_indices_3[nnz_3] = {2, 1, 0};
+    int32_t col_indices_3[nnz_3] = {2, 1, 0};
     do_cusparse_spmm3x3(
         nnz_3,
         values_3,
@@ -312,11 +298,10 @@ int main() {
         col_indices_3
     );
 
-    // Ascending order also fails
     int64_t nnz_4 = 3;
     double values_4[nnz_4] = {1, 1, 1};
-    int64_t row_indices_4[nnz_4] = {0, 1, 2};
-    int64_t col_indices_4[nnz_4] = {0, 1, 2};
+    int32_t row_indices_4[nnz_4] = {0, 1, 2};
+    int32_t col_indices_4[nnz_4] = {0, 1, 2};
     do_cusparse_spmm3x3(
         nnz_4,
         values_4,
@@ -324,13 +309,10 @@ int main() {
         col_indices_4
     );
 
-    // A full 3x3 ones matrix also gives the wrong result.
-    // For some reason, everything gets summed into the first
-    // row, and the other two rows are all zeros
     int64_t nnz_5 = 9;
     double values_5[nnz_5] = {1, 1, 1, 1, 1, 1, 1, 1, 1};
-    int64_t row_indices_5[nnz_5] = {0, 0, 0, 1, 1, 1, 2, 2, 2};
-    int64_t col_indices_5[nnz_5] = {0, 1, 2, 0, 1, 2, 0, 1, 2};
+    int32_t row_indices_5[nnz_5] = {0, 0, 0, 1, 1, 1, 2, 2, 2};
+    int32_t col_indices_5[nnz_5] = {0, 1, 2, 0, 1, 2, 0, 1, 2};
     do_cusparse_spmm3x3(
         nnz_5,
         values_5,
